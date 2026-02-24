@@ -11,14 +11,14 @@ An enterprise-grade cloud security intelligence platform that detects, scores, a
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Sidebar │  Dashboard · Roles · Analysis · Reports          │
-│  --------│-------------------------------------------------  │
+│  --------│------------------------------------------------- │
 │  IAM     │  Total Roles  Critical  Medium  Avg Risk Score   │
 │  Risk AI │     10           4        3        47/100        │
-│          │                                                   │
+│          │                                                  │
 │  Dash    │  [Risk Donut Chart]  [Cloud Bar Chart]           │
-│  Roles   │                                                   │
+│  Roles   │                                                  │
 │  Analysis│  Top Risky Roles Table (sortable, filterable)    │
-│  Reports │                                                   │
+│  Reports │                                                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
