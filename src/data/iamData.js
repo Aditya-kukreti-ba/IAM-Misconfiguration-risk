@@ -1,0 +1,206 @@
+import { computeRisk } from "../utils/riskEngine";
+
+// ─── RAW IAM ROLE DEFINITIONS ──────────────────────────────────────────────────
+// Each role represents a real-world IAM configuration sample.
+// In production, these would be fetched via:
+//   AWS  → iam list-roles + iam get-role-policy
+//   Azure → role-assignments list + az ad app list
+//   GCP  → gcloud projects get-iam-policy + iam service-accounts list
+
+export const IAM_DATA = {
+  aws: [
+    {
+      id: "aws-1",
+      cloud: "AWS",
+      service: "SageMaker",
+      role: "AI-Admin-Role",
+      features: {
+        has_wildcard_permission: true,
+        public_access_enabled: true,
+        admin_privileges: true,
+        cross_account_access: true,
+        unused_high_privilege_role: false,
+        ai_model_full_access: true,
+      },
+      policy: '{"Effect":"Allow","Action":"*","Resource":"*"}',
+      lastUsed: "Never",
+      attachedPolicies: ["AdministratorAccess"],
+      trustedEntities: ["arn:aws:iam::999999999:root"],
+    },
+    {
+      id: "aws-2",
+      cloud: "AWS",
+      service: "SageMaker",
+      role: "SageMaker-Invoke-Role",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: false,
+        admin_privileges: false,
+        cross_account_access: false,
+        unused_high_privilege_role: false,
+        ai_model_full_access: true,
+      },
+      policy: '{"Effect":"Allow","Action":["sagemaker:InvokeEndpoint"],"Resource":"arn:aws:sagemaker:*:*:endpoint/*"}',
+      lastUsed: "2h ago",
+      attachedPolicies: ["SageMakerInvokeOnly"],
+      trustedEntities: ["arn:aws:iam::123456789:role/app"],
+    },
+    {
+      id: "aws-3",
+      cloud: "AWS",
+      service: "Bedrock",
+      role: "Bedrock-Public-Access",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: true,
+        admin_privileges: false,
+        cross_account_access: true,
+        unused_high_privilege_role: true,
+        ai_model_full_access: true,
+      },
+      policy: '{"Effect":"Allow","Action":"bedrock:*","Principal":"*"}',
+      lastUsed: "45 days ago",
+      attachedPolicies: ["BedrockFullAccess"],
+      trustedEntities: ["*"],
+    },
+    {
+      id: "aws-4",
+      cloud: "AWS",
+      service: "SageMaker",
+      role: "ML-DataSci-Role",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: false,
+        admin_privileges: false,
+        cross_account_access: false,
+        unused_high_privilege_role: false,
+        ai_model_full_access: false,
+      },
+      policy: '{"Effect":"Allow","Action":["sagemaker:CreateTrainingJob","s3:GetObject"],"Resource":"arn:aws:sagemaker:us-east-1:123:*"}',
+      lastUsed: "1h ago",
+      attachedPolicies: ["MLScopedPolicy"],
+      trustedEntities: ["arn:aws:iam::123456789:role/ds-team"],
+    },
+  ],
+
+  azure: [
+    {
+      id: "az-1",
+      cloud: "Azure",
+      service: "Azure ML",
+      role: "AzureML-Contributor",
+      features: {
+        has_wildcard_permission: true,
+        public_access_enabled: true,
+        admin_privileges: true,
+        cross_account_access: false,
+        unused_high_privilege_role: true,
+        ai_model_full_access: true,
+      },
+      policy: '{"roleDefinitionName":"Contributor","scope":"/subscriptions/*"}',
+      lastUsed: "30 days ago",
+      attachedPolicies: ["Contributor"],
+      trustedEntities: ["All users in tenant"],
+    },
+    {
+      id: "az-2",
+      cloud: "Azure",
+      service: "Cognitive Services",
+      role: "CognitiveServices-Reader",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: false,
+        admin_privileges: false,
+        cross_account_access: false,
+        unused_high_privilege_role: false,
+        ai_model_full_access: false,
+      },
+      policy: '{"roleDefinitionName":"Cognitive Services User","scope":"/subscriptions/xxx/resourceGroups/ml-rg"}',
+      lastUsed: "3h ago",
+      attachedPolicies: ["CognitiveServicesUser"],
+      trustedEntities: ["sp-ml-app"],
+    },
+    {
+      id: "az-3",
+      cloud: "Azure",
+      service: "OpenAI Service",
+      role: "OpenAI-Owner-Assigned",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: true,
+        admin_privileges: true,
+        cross_account_access: true,
+        unused_high_privilege_role: false,
+        ai_model_full_access: true,
+      },
+      policy: '{"roleDefinitionName":"Owner","scope":"/subscriptions/xxx/resourceGroups/openai-rg"}',
+      lastUsed: "2 days ago",
+      attachedPolicies: ["Owner"],
+      trustedEntities: ["external-partner-tenant"],
+    },
+  ],
+
+  gcp: [
+    {
+      id: "gcp-1",
+      cloud: "GCP",
+      service: "Vertex AI",
+      role: "vertex-ai-admin@project.iam",
+      features: {
+        has_wildcard_permission: true,
+        public_access_enabled: false,
+        admin_privileges: true,
+        cross_account_access: false,
+        unused_high_privilege_role: false,
+        ai_model_full_access: true,
+      },
+      policy: '{"role":"roles/aiplatform.admin","member":"serviceAccount:sa@project.iam.gserviceaccount.com"}',
+      lastUsed: "1 day ago",
+      attachedPolicies: ["roles/aiplatform.admin"],
+      trustedEntities: ["allUsers"],
+    },
+    {
+      id: "gcp-2",
+      cloud: "GCP",
+      service: "Vertex AI",
+      role: "vertex-predictor-sa",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: false,
+        admin_privileges: false,
+        cross_account_access: false,
+        unused_high_privilege_role: false,
+        ai_model_full_access: false,
+      },
+      policy: '{"role":"roles/aiplatform.user","member":"serviceAccount:predictor@project.iam.gserviceaccount.com"}',
+      lastUsed: "10m ago",
+      attachedPolicies: ["roles/aiplatform.user"],
+      trustedEntities: ["predictor-sa"],
+    },
+    {
+      id: "gcp-3",
+      cloud: "GCP",
+      service: "Cloud AI",
+      role: "sa-exposed-key@project.iam",
+      features: {
+        has_wildcard_permission: false,
+        public_access_enabled: true,
+        admin_privileges: false,
+        cross_account_access: true,
+        unused_high_privilege_role: true,
+        ai_model_full_access: true,
+      },
+      policy: '{"role":"roles/editor","member":"allUsers"}',
+      lastUsed: "90 days ago",
+      attachedPolicies: ["roles/editor"],
+      trustedEntities: ["allAuthenticatedUsers", "allUsers"],
+    },
+  ],
+};
+
+// Flatten all clouds and attach computed risk scores
+export const ALL_ROLES = [
+  ...IAM_DATA.aws,
+  ...IAM_DATA.azure,
+  ...IAM_DATA.gcp,
+].map((role) => ({ ...role, risk: computeRisk(role.features) }));
