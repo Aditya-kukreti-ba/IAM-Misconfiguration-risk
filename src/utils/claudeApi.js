@@ -24,7 +24,7 @@ export async function analyzeIAMRole(role) {
     trusted_entities: role.trustedEntities,
   };
 
-  const response = await fetch("http://localhost:3001/api/analyze", {
+  const response = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
